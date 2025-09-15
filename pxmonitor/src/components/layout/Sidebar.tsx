@@ -8,7 +8,9 @@ import {
   Settings, 
   FileDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Monitor,
+  Network
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -22,6 +24,8 @@ const Sidebar = () => {
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Diagnosis", path: "/diagnosis", icon: <ScanSearch size={20} /> },
     { name: "System Mode", path: "/system-mode", icon: <Zap size={20} /> },
+    { name: "System Monitor", path: "/system-monitor", icon: <Monitor size={20} /> },
+    { name: "Connection Mapper", path: "/connection-mapper", icon: <Network size={20} /> },
     { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
   ];
 

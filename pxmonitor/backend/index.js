@@ -1,10 +1,16 @@
 import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors'; // Add CORS support
+import bodyParser from "body-parser";
 import { exec } from 'child_process';
 import path from 'path';
 import { startContinuousCapture, setNetworkInterface, getCurrentInterface } from './scripts/tshark-interface.js';
 import * as geminiService from './services/gemini-service.js';
+import { askSystemQuestion } from './services/gemini-service.js';
+import {  getMappedConnections } from './connection_mapper.js';
+import { getProcesses,getBattery,detectSuspicious,getSystemHealth} from './systemServices.js';
+import { startProcessMonitor } from './process_monitor.js';
+import { analyzeConnectionsForSecurity, explainHostname } from './services/gemini-service.js';
 
 const app = express();
 const server = createServer(app);
@@ -15,7 +21,9 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+// Correctly configure body-parser with a higher limit
+app.use(bodyParser.json({ limit: '20mb' }));
+app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
 
 // --- SCRIPT EXECUTION ENGINE ---
 const __dirname = path.dirname(new URL(import.meta.url).pathname.substring(1));
@@ -55,6 +63,52 @@ const executePowerShellScript = (scriptName, args = []) => {
         });
     });
 };
+// -- SYSTEM ENDPOINTS - TASKMANAGER -- 
+// all processes
+app.get("/api/system/processes", async (req, res) => {
+  console.log("[API] GET /api/system/processes called");
+  try {
+    const procs = await getProcesses();
+    console.log(`[API] Returning ${procs.length} processes`);
+    res.json(procs);
+  } catch (err) {
+    console.error("[API] Error in /api/system/processes:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// battery impact
+app.get("/api/system/battery", async (req, res) => {
+  try {
+    const bat = await getBattery();
+    res.json(bat);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// suspicious activity
+app.get("/api/system/suspicious", async (req, res) => {
+  try {
+    const bad = await detectSuspicious();
+    res.json(bad);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// system health summary
+app.get("/api/system/health", async (req, res) => {
+  console.log("[API] GET /api/system/health called");
+  try {
+    const health = await getSystemHealth();
+    console.log("[API] Health data:", JSON.stringify(health, null, 2));
+    res.json(health);
+  } catch (err) {
+    console.error("[API] Error in /api/system/health:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // --- DIAGNOSTIC TEST ENDPOINTS ---
 
@@ -95,14 +149,43 @@ app.get('/api/diagnostics/dns-test', async (req, res) => {
 
 app.post('/api/run-script/:scriptName', async (req, res) => {
     const { scriptName } = req.params;
+    const { args } = req.body; // Extract args from the request body
     try {
-        const output = await executePowerShellScript(scriptName);
+        const output = await executePowerShellScript(scriptName, args);
         console.log(`Script ${scriptName} executed successfully. Output: ${output}`);
         res.json({ success: true, message: output });
     } catch (err) {
         console.error(`Error executing script ${scriptName}:`, err);
         res.status(500).json({ success: false, error: `Failed to execute ${scriptName}`, details: err });
     }
+});
+
+// connection security mapper scan endpoint
+app.post("/api/connections/security-scan", async (req, res) => {
+  try {
+    const { connections } = req.body;
+    if (!connections) {
+      return res.status(400).json({ error: "Connection data is required." });
+    }
+    const analysis = await analyzeConnectionsForSecurity(connections);
+    res.json({ analysis });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to perform security scan." });
+  }
+});
+
+// Explain hostname endpoint
+app.post("/api/connections/explain", async (req, res) => {
+  try {
+    const { hostname } = req.body;
+    if (!hostname || hostname === 'N/A') {
+      return res.status(400).json({ error: "A valid hostname is required." });
+    }
+    const explanation = await explainHostname(hostname);
+    res.json({ explanation });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get explanation." });
+  }
 });
 
 let captureController = null;
@@ -308,17 +391,77 @@ app.get('/debug', (req, res) => {
   });
 });
 
+app.get('/api/active-processes', async (req, res) => {
+  try {
+    const procs = await listActiveProcesses();
+    res.json(procs);
+  } catch (e) {
+    console.error('active-processes error', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/connections/', async (req, res) => {
+  
+  try {
+    const data = await getMappedConnections();
+    res.json(data || []); // frontend expects an array
+  } catch (e) {
+    console.error('connections error', e);
+    res.status(500).json({ error: "Failed to get connections" });
+    res.status(500).json({ error: e.message });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
   console.log(`Health check available at http://localhost:${PORT}/health`);
   console.log(`Status check available at http://localhost:${PORT}/status`);
   console.log(`Debug info available at http://localhost:${PORT}/debug`);
-  
+  startProcessMonitor();
   // Initialize capture after a short delay to let server fully start
   setTimeout(initializeCapture, 1000);
 });
 
+// === GEMINI Q/A === for system monitoring
+app.post("/api/system/analyze", async (req, res) => {
+  console.log("[API] POST /api/system/analyze called");
+  console.log("[API] Request body:", JSON.stringify(req.body, null, 2));
+  
+  try {
+    const { question, context, history } = req.body;
+    
+    console.log("[API] Question:", question);
+    console.log("[API] Context health:", context.health ? "Present" : "Missing");
+    console.log("[API] Context processes count:", context.processes ? context.processes.length : "Missing");
+
+    const topProcessesString = (context.processes || [])
+      .sort((a, b) => b.cpu - a.cpu)
+      .slice(0, 15) // Reduced from 20 to 15 for safety
+      .map(p => `${p.name} (CPU: ${p.cpu.toFixed(1)}%, Mem: ${p.mem.toFixed(1)}MB)`)
+      .join(', ');
+
+    // 2. Create a cleaner summary object to send to Gemini
+    const summarizedContext = {
+      topProcesses: topProcessesString, // Use the new compact string
+      health: context.health || {}, 
+      suspicious: (context.suspicious || []).slice(0, 5).map(p => p.name).join(', ') || 'None',
+    };
+
+    console.log("[API] Calling askSystemQuestion...");
+    const answer = await askSystemQuestion(question, summarizedContext, history);
+    console.log("[API] Got answer from askSystemQuestion:", answer.substring(0, 100) + "...");
+    
+    res.json({ answer });
+  } catch (err) {
+    console.error("[API] Error in /api/system/analyze:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+app.listen()
 process.on('SIGTERM', () => {
   console.log('Received SIGTERM, shutting down gracefully...');
   if (captureController) {

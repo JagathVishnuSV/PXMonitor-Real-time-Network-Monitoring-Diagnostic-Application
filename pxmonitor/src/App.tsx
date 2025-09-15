@@ -13,6 +13,9 @@ import Diagnosis from "./pages/Diagnosis";
 import SystemMode from "./pages/SystemMode";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import SystemMonitor from "./pages/SystemMonitor";
+import ConnectionMapperPage from "./pages/ConnectionMapperPage";
+
 
 const queryClient = new QueryClient();
 
@@ -102,6 +105,8 @@ const App = () => {
             <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
             <Route path="/diagnosis" element={<Layout><Diagnosis /></Layout>} />
             <Route path="/system-mode" element={<Layout><SystemMode /></Layout>} />
+            <Route path="/connection-mapper" element={<Layout><ConnectionMapperPage /></Layout>} />            
+            <Route path="/system-monitor" element={<Layout><SystemMonitor /></Layout>} />
             <Route path="/settings" element={<Layout><Settings /></Layout>} />
             
             {/* Catch-all route */}

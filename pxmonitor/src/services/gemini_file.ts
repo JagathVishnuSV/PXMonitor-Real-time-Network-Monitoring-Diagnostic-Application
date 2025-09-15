@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { supabase } from "@/lib/supabaseClient";
 
 // IMPORTANT: Remember to replace "YOUR_API_KEY" with your actual Google AI Studio API key.
 const API_KEY = "AIzaSyAajxqRTFjW0gSph8Aod3sCOpc8qvhmFR0";
@@ -8,7 +9,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const analysisCache = new Map<string, string>();
 
-export async function generateDetailedAnalysis(metrics: Record<string, any>): Promise<string> {
+export async function generateDetailedAnalysis(metrics: Record<string, unknown>): Promise<string> {
     const cacheKey = JSON.stringify(metrics);
     if (analysisCache.has(cacheKey)) {
         console.log("Returning cached detailed analysis.");
@@ -37,15 +38,27 @@ export async function generateDetailedAnalysis(metrics: Record<string, any>): Pr
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
+
+        // Save the report to Supabase
+        const { error: supabaseError } = await supabase
+            .from('network_report')
+            .insert([{ created_at: new Date().toISOString(), summary: text }]);
+
+        if (supabaseError) {
+            console.error("Error saving report to Supabase:", supabaseError);
+            // We won't throw an error to the user, just log it for debugging.
+        } else {
+            console.log("Report saved to Supabase successfully.");
+        }
         
         // Cache the result for a short period to avoid rapid re-calls
         analysisCache.set(cacheKey, text);
         setTimeout(() => analysisCache.delete(cacheKey), 60000); // Cache for 1 minute
 
         return text;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error calling Gemini API for detailed analysis:", error);
-        if (error.message.includes('API key not valid')) {
+        if (error instanceof Error && error.message.includes('API key not valid')) {
             throw new Error("The Gemini API key is not valid. Please check the key in 'src/services/gemini_file.ts'.");
         }
         throw new Error("The AI analysis service is currently unavailable or encountered an error.");

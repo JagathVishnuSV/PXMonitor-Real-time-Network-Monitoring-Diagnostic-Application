@@ -1,10 +1,10 @@
 try {
-    # Run probes (ICMP, TCP, DNS)
+    
     $ping = Test-Connection -ComputerName 8.8.8.8 -Count 1 -ErrorAction Stop
     $tcp = Test-NetConnection -ComputerName google.com -Port 443 -ErrorAction Stop
     $dns = Resolve-DnsName google.com -ErrorAction Stop
     if ($ping.ResponseTime -gt 100 -or -not $tcp.TcpTestSucceeded -or $dns.QueryTime -gt 100) {
-        # Reconnect Wi-Fi
+        
         $ssid = (netsh wlan show interfaces | Select-String "SSID").Line.Split(":")[1].Trim()
         netsh wlan disconnect
         Start-Sleep -Seconds 2
