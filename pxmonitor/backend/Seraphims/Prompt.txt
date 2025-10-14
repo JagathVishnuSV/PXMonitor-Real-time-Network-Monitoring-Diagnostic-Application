@@ -1,0 +1,35 @@
+Here's the twist 
+there are three models 
+anomaly_model trained on
+Isolation forest
+FEATURE_COLUMNS = ['latency', 'jitter', 'bandwidth', 'packet_loss', 'dns_delay']
+where it provides the data as the anomaly or not in -1 and in 1 for not anamoly
+however I need to convert this anomaly into something like 
+If in case of anamoly and that time when there is high latency (Rule based approaches) , it gives some message that is understandable by layman
+or if it is anomaly and jitter means , it give some other reponse 
+
+
+
+for the gradient boosting model it is trained on 
+FEATURES = ['latency', 'jitter', 'packet_loss', 'bandwidth']
+and provides the result as the 
+Target Encoding Map: {0: '1080p', 1: '480p', 2: '720p'}
+The target value needs to be typecast to it
+
+and for the next model
+Bottleneck model
+congestion_mapping = {'High': 2, 'Moderate': 1, 'Low': 0}
+features = ['latency', 'jitter', 'bandwidth', 'packet_loss', 'dns_delay', 'congestion_level_encoded']
+
+congestion model is encoded to number and then the it is sended and it's output is a string 
+
+
+
+
+I need to enhance this prompt like 
+by adding create a new page with existing with the title 
+"Seraphims, your helpful machine learning models"
+"and two line description about like check out our models to know about the things"
+and then create a three separated divs that has the heading 
+Description
+and button that eventually calls that models 

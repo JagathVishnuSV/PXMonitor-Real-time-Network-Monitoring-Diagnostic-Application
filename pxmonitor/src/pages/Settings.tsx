@@ -55,31 +55,6 @@ const Settings = () => {
       ]
     },
     {
-      id: "network",
-      title: "Network Settings",
-      settings: [
-        {
-          id: "isp-speed",
-          name: "ISP Speed",
-          description: "Your internet service provider's advertised speed",
-          type: "input",
-          value: "100",
-          unit: "Mbps"
-        },
-        {
-          id: "interface",
-          name: "Network Interface",
-          description: "The network interface to monitor",
-          type: "dropdown",
-          value: "wifi",
-          options: [
-            { label: "Wi-Fi", value: "wifi" },
-            { label: "Ethernet", value: "ethernet" }
-          ]
-        }
-      ]
-    },
-    {
       id: "thresholds",
       title: "Alert Thresholds",
       settings: [
@@ -152,10 +127,6 @@ const Settings = () => {
   const showNotifications = settingsGroups
     .find(group => group.id === "general")
     ?.settings.find(setting => setting.id === "notifications")?.value || false;
-    
-  const currentInterface = settingsGroups
-    .find(group => group.id === "network")
-    ?.settings.find(setting => setting.id === "interface")?.value || "wifi";
 
   const handleSettingChange = (groupId: string, settingId: string, newValue: any) => {
     setSettingsGroups(prevGroups => 
@@ -186,33 +157,9 @@ const Settings = () => {
         return group;
       })
     );
-    
-    // Update TShark interface immediately if it changes
-    if (settingId === "interface") {
-      updateTSharkInterface(newValue);
-    }
-  };
-  
-  // Function to update TShark interface in the backend
-  const updateTSharkInterface = (interfaceValue: string) => {
-    console.log(`Updating TShark interface to: ${interfaceValue === "ethernet" ? "Ethernet" : "Wi-Fi"}`);
-    // In a real app, this would call the backend API
-    const command = interfaceValue === "ethernet" ? 
-      '"/path/tshark_exe", "Ethernet"' : 
-      '"/path/tshark_exe", "Wi-Fi"';
-    
-    console.log(`Executing command: ${command}`);
-    
-    // Simulate an API call with timeout
-    setTimeout(() => {
-      console.log("TShark interface updated successfully");
-    }, 500);
   };
 
   const saveSettings = () => {
-    // Update TShark interface based on current selection
-    updateTSharkInterface(currentInterface);
-    
     // Save settings to local storage
     localStorage.setItem('pxmonitor-settings', JSON.stringify(settingsGroups));
     
@@ -221,7 +168,6 @@ const Settings = () => {
       detail: { 
         darkMode: isDarkMode,
         showNotifications,
-        currentInterface,
         settingsGroups
       } 
     }));

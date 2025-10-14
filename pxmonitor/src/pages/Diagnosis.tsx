@@ -145,10 +145,23 @@ const Diagnosis = () => {
 
     try {
       // 1. Execute the script
-      const scriptResponse = await fetch(`/api/run-script/${script.fileName}`, { method: 'POST' });
+      const scriptResponse = await fetch(`/api/run-script/${script.fileName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}), // Send an empty JSON object as the body
+      });
       if (!scriptResponse.ok) {
-        const errorResult = await scriptResponse.json();
-        throw new Error(errorResult.message || 'Script execution failed on the server.');
+        // Handle non-JSON error responses gracefully
+        const errorText = await scriptResponse.text();
+        try {
+          const errorResult = JSON.parse(errorText);
+          throw new Error(errorResult.message || 'Script execution failed on the server.');
+        } catch (e) {
+          // If parsing fails, it's likely HTML or plain text, so use that as the error.
+          throw new Error(errorText || 'Script execution failed with a non-JSON response.');
+        }
       }
       
       // 2. Fetch fresh metrics to get the "after" state
@@ -192,12 +205,13 @@ const Diagnosis = () => {
         description: `${script.fileName} completed. Comparison is now visible.`,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Error executing script ${script.fileName}:`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       toast({
         variant: "destructive",
         title: "Script Execution Failed",
-        description: error.message || `Failed to execute ${script.fileName}.`,
+        description: errorMessage || `Failed to execute ${script.fileName}.`,
       });
       setScriptResults(prev => ({ ...prev, [script.id]: { ...prev[script.id], status: "idle" } }));
     }

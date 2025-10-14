@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SystemMonitor from "./pages/SystemMonitor";
 import ConnectionMapperPage from "./pages/ConnectionMapperPage";
+import SeraphimsPage from "./pages/SeraphimsPage";
 
 
 const queryClient = new QueryClient();
@@ -107,6 +108,10 @@ const App = () => {
             <Route path="/system-mode" element={<Layout><SystemMode /></Layout>} />
             <Route path="/connection-mapper" element={<Layout><ConnectionMapperPage /></Layout>} />            
             <Route path="/system-monitor" element={<Layout><SystemMonitor /></Layout>} />
+                        <Route 
+              path="/seraphims" 
+              element={<Layout><SeraphimsPage /></Layout>} 
+            />
             <Route path="/settings" element={<Layout><Settings /></Layout>} />
             
             {/* Catch-all route */}

@@ -11,6 +11,7 @@ import {  getMappedConnections } from './connection_mapper.js';
 import { getProcesses,getBattery,detectSuspicious,getSystemHealth} from './systemServices.js';
 import { startProcessMonitor } from './process_monitor.js';
 import { analyzeConnectionsForSecurity, explainHostname } from './services/gemini-service.js';
+import { runAnomalyDetection, runQualityPrediction, runBottleneckDetection } from './Seraphims/seraphims-service.js';
 
 const app = express();
 const server = createServer(app);
@@ -149,7 +150,8 @@ app.get('/api/diagnostics/dns-test', async (req, res) => {
 
 app.post('/api/run-script/:scriptName', async (req, res) => {
     const { scriptName } = req.params;
-    const { args } = req.body; // Extract args from the request body
+    // Make destructuring safer by providing a fallback for req.body
+    const { args = [] } = req.body || {}; 
     try {
         const output = await executePowerShellScript(scriptName, args);
         console.log(`Script ${scriptName} executed successfully. Output: ${output}`);
@@ -456,6 +458,90 @@ app.post("/api/system/analyze", async (req, res) => {
     res.json({ answer });
   } catch (err) {
     console.error("[API] Error in /api/system/analyze:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// --- SERAPHIMS ML MODEL ENDPOINTS ---
+
+/**
+ * Run anomaly detection model
+ * POST /api/seraphims/anomaly
+ * Body: { latency, jitter, bandwidth, packet_loss, dns_delay }
+ * Returns: { prediction: -1 or 1, isAnomaly: boolean, interpretation: string }
+ */
+app.post('/api/seraphims/anomaly', async (req, res) => {
+  try {
+    console.log('[API] POST /api/seraphims/anomaly called with data:', req.body);
+    const metrics = req.body;
+    
+    // Validate required fields
+    const requiredFields = ['latency', 'jitter', 'bandwidth', 'packet_loss', 'dns_delay'];
+    for (const field of requiredFields) {
+      if (metrics[field] === undefined || metrics[field] === null) {
+        return res.status(400).json({ error: `Missing required field: ${field}` });
+      }
+    }
+    
+    const result = await runAnomalyDetection(metrics);
+    res.json(result);
+  } catch (err) {
+    console.error('[API] Error in /api/seraphims/anomaly:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Run quality prediction model (gradient boosting)
+ * POST /api/seraphims/quality
+ * Body: { latency, jitter, packet_loss, bandwidth }
+ * Returns: { prediction: 0|1|2, quality: '1080p'|'480p'|'720p' }
+ */
+app.post('/api/seraphims/quality', async (req, res) => {
+  try {
+    console.log('[API] POST /api/seraphims/quality called with data:', req.body);
+    const metrics = req.body;
+    
+    // Validate required fields
+    const requiredFields = ['latency', 'jitter', 'packet_loss', 'bandwidth'];
+    for (const field of requiredFields) {
+      if (metrics[field] === undefined || metrics[field] === null) {
+        return res.status(400).json({ error: `Missing required field: ${field}` });
+      }
+    }
+    
+    const result = await runQualityPrediction(metrics);
+    res.json(result);
+  } catch (err) {
+    console.error('[API] Error in /api/seraphims/quality:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Run network bottleneck detection model
+ * POST /api/seraphims/bottleneck
+ * Body: { latency, jitter, bandwidth, packet_loss, dns_delay }
+ * Returns: { prediction: 'High'|'Moderate'|'Low', congestionLevel: string }
+ */
+app.post('/api/seraphims/bottleneck', async (req, res) => {
+  try {
+    console.log('[API] POST /api/seraphims/bottleneck called with data:', req.body);
+    const metrics = req.body;
+    
+    // Validate required fields
+    const requiredFields = ['latency', 'jitter', 'bandwidth', 'packet_loss', 'dns_delay'];
+    for (const field of requiredFields) {
+      if (metrics[field] === undefined || metrics[field] === null) {
+        return res.status(400).json({ error: `Missing required field: ${field}` });
+      }
+    }
+    
+    const result = await runBottleneckDetection(metrics);
+    res.json(result);
+  } catch (err) {
+    console.error('[API] Error in /api/seraphims/bottleneck:', err);
     res.status(500).json({ error: err.message });
   }
 });
