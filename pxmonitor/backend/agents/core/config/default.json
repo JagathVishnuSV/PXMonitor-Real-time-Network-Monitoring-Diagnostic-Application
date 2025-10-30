@@ -1,0 +1,138 @@
+{
+  "agentManager": {
+    "monitoring_interval": 30000,
+    "max_concurrent_actions": 3,
+    "enable_predictive": true,
+    "log_actions": true,
+    "debug_mode": false
+  },
+  "contextEngine": {
+    "cache_timeout": 10000,
+    "context_history_limit": 100,
+    "network_baseline_samples": 10,
+    "enable_pattern_learning": true
+  },
+  "actionExecutor": {
+    "script_timeout": 30000,
+    "retry_attempts": 3,
+    "enable_rollback": true,
+    "powershell_execution_policy": "RemoteSigned"
+  },
+  "agents": {
+    "trafficPrioritization": {
+      "enabled": true,
+      "cooldownPeriod": 60000,
+      "priority": 1,
+      "thresholds": {
+        "highBandwidthUsage": 80,
+        "criticalLatency": 150,
+        "maxConcurrentConnections": 100,
+        "packetLossThreshold": 0.02
+      },
+      "rules": {
+        "enableGamingMode": true,
+        "prioritizeStreamingTraffic": true,
+        "throttleBackgroundUpdates": true
+      }
+    },
+    "networkOptimization": {
+      "enabled": true,
+      "cooldownPeriod": 120000,
+      "priority": 2,
+      "thresholds": {
+        "latency": {
+          "good": 50,
+          "fair": 100,
+          "poor": 200
+        },
+        "packetLoss": {
+          "acceptable": 0.01,
+          "poor": 0.05
+        },
+        "bandwidth": {
+          "lowUsage": 10,
+          "mediumUsage": 50,
+          "highUsage": 80
+        }
+      },
+      "actions": {
+        "dnsFlush": true,
+        "networkReset": true,
+        "mtuOptimization": true,
+        "tcpOptimization": true
+      }
+    },
+    "securityMonitoring": {
+      "enabled": true,
+      "cooldownPeriod": 60000,
+      "priority": 3,
+      "thresholds": {
+        "suspiciousConnectionCount": 50,
+        "unusualTrafficSpike": 5.0,
+        "knownMaliciousIPs": [],
+        "maxConnectionsPerProcess": 20
+      },
+      "actions": {
+        "blockSuspiciousIPs": true,
+        "logSecurityEvents": true,
+        "alertOnThreats": true,
+        "quarantineProcesses": false
+      }
+    },
+    "performanceAnalytics": {
+      "enabled": true,
+      "cooldownPeriod": 300000,
+      "priority": 4,
+      "thresholds": {
+        "performanceDegradation": 0.2,
+        "responseTimeIncrease": 0.3,
+        "resourceUsageSpike": 0.8,
+        "errorRateIncrease": 0.1
+      },
+      "analytics": {
+        "enableTrendAnalysis": true,
+        "generateReports": true,
+        "identifyBottlenecks": true,
+        "predictPerformance": true
+      }
+    },
+    "mlPredictive": {
+      "enabled": true,
+      "cooldownPeriod": 180000,
+      "priority": 5,
+      "models": {
+        "anomalyDetectionModel": "../../../Seraphims/anomaly_model.onnx",
+        "networkBottleneckModel": "../../../Seraphims/network_bottleneck.onnx",
+        "gradientBoostingModel": "../../../Seraphims/gradient_boosting.onnx"
+      },
+      "thresholds": {
+        "anomalyScore": 0.7,
+        "confidenceLevel": 0.8,
+        "predictionAccuracy": 0.75
+      },
+      "features": {
+        "enableAnomalyDetection": true,
+        "enableBottleneckPrediction": true,
+        "enablePerformancePrediction": true,
+        "enablePatternRecognition": true
+      }
+    }
+  },
+  "logging": {
+    "level": "info",
+    "enableFileLogging": true,
+    "logDirectory": "./logs",
+    "maxLogFiles": 10,
+    "maxLogSize": "10MB"
+  },
+  "notifications": {
+    "enableDesktopNotifications": false,
+    "enableEmailAlerts": false,
+    "enableSlackIntegration": false,
+    "alertThresholds": {
+      "criticalNetworkHealth": 30,
+      "securityThreatLevel": 8,
+      "performanceDegradation": 40
+    }
+  }
+}

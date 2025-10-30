@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Monitor,
   Network,
-  BrainCircuit
+  BrainCircuit,
+  Bot
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const Sidebar = () => {
   const menuItems = [
     { name: "Home", path: "/", icon: <Home size={20} /> },
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
+    { name: "AI Agents", path: "/agents", icon: <Bot size={20} /> },
     { name: "Diagnosis", path: "/diagnosis", icon: <ScanSearch size={20} /> },
     { name: "System Mode", path: "/system-mode", icon: <Zap size={20} /> },
     { name: "System Monitor", path: "/system-monitor", icon: <Monitor size={20} /> },
@@ -42,12 +44,14 @@ const Sidebar = () => {
           setCurrentMetrics(data);
         }
       } catch (error) {
-        console.error('Error fetching metrics:', error);
+        // Silently handle network errors to prevent console spam
+        console.log('Metrics endpoint unavailable');
       }
     };
 
-    fetchMetrics();
-    const interval = setInterval(fetchMetrics, 5000); // Update every 5 seconds
+    // Initial fetch with delay
+    setTimeout(fetchMetrics, 3000);
+    const interval = setInterval(fetchMetrics, 30000); // Update every 30 seconds (reduced frequency)
     
     return () => clearInterval(interval);
   }, []);

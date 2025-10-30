@@ -23,7 +23,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
  */
 async function explainNetworkComponent(componentName) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     const prompt = `Explain what a "${componentName}" is in the context of network monitoring 
                     and how it helps users understand their network performance. 
@@ -80,7 +80,7 @@ async function analyzeNetworkMetrics(metrics) {
  */
 async function askSystemQuestion(question, context,history = []) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const historyString = history
       .map(message => `${message.role === 'user' ? 'User' : 'AI'}: ${message.text}`)
       .join('\n');
@@ -132,7 +132,7 @@ async function askSystemQuestion(question, context,history = []) {
  */
 async function analyzeConnectionsForSecurity(connectionsList) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
       You are a cybersecurity analyst providing a quick, high-level risk assessment based on network connections. Your audience is non-technical.
@@ -167,7 +167,7 @@ async function analyzeConnectionsForSecurity(connectionsList) {
  */
 async function explainHostname(hostname) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
       You are an AI assistant explaining a network connection to a non-technical user.

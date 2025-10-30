@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import Layout from "./components/layout/Layout";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import NotificationToast from "./components/ui/NotificationToast";
+import ConnectionStatus from "./components/ui/ConnectionStatus";
 import Home from "./pages/Home";
 import Welcome from "./pages/Welcome";
 import Dashboard from "./pages/Dashboard";
@@ -16,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import SystemMonitor from "./pages/SystemMonitor";
 import ConnectionMapperPage from "./pages/ConnectionMapperPage";
 import SeraphimsPage from "./pages/SeraphimsPage";
+import Index from "./pages/Index";
 
 
 const queryClient = new QueryClient();
@@ -95,9 +99,12 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+        <NotificationProvider>
+          <Toaster />
+          <Sonner />
+          <NotificationToast />
+          <ConnectionStatus />
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/welcome" element={<Welcome />} />
@@ -108,16 +115,18 @@ const App = () => {
             <Route path="/system-mode" element={<Layout><SystemMode /></Layout>} />
             <Route path="/connection-mapper" element={<Layout><ConnectionMapperPage /></Layout>} />            
             <Route path="/system-monitor" element={<Layout><SystemMonitor /></Layout>} />
-                        <Route 
+            <Route 
               path="/seraphims" 
               element={<Layout><SeraphimsPage /></Layout>} 
             />
+            <Route path="/agents" element={<Layout><Index /></Layout>} />
             <Route path="/settings" element={<Layout><Settings /></Layout>} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </NotificationProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

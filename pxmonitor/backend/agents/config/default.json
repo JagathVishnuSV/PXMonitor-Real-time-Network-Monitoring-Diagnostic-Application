@@ -1,0 +1,135 @@
+{
+  "agentManager": {
+    "monitoring_interval": 30000,
+    "max_concurrent_actions": 3,
+    "enable_predictive": true,
+    "log_actions": true,
+    "context_history_size": 100,
+    "action_history_size": 100
+  },
+  "agents": {
+    "TrafficPrioritization": {
+      "enabled": true,
+      "cooldownPeriod": 60000,
+      "enableGamingMode": true,
+      "workHoursStart": "09:00",
+      "workHoursEnd": "17:00",
+      "rules": {
+        "work_hours": {
+          "priority": ["teams.exe", "outlook.exe", "chrome.exe", "excel.exe", "word.exe"],
+          "throttle": ["netflix", "steam.exe", "spotify.exe", "youtube"],
+          "bandwidth_allocation": { "work": 70, "entertainment": 20, "system": 10 }
+        },
+        "entertainment_hours": {
+          "priority": ["netflix", "spotify.exe", "chrome.exe", "vlc.exe"],
+          "throttle": [],
+          "bandwidth_allocation": { "entertainment": 60, "work": 25, "system": 15 }
+        },
+        "gaming": {
+          "priority": ["steam.exe", "discord.exe", "battle.net.exe", "epicgameslauncher.exe"],
+          "throttle": ["chrome.exe", "teams.exe", "outlook.exe"],
+          "low_latency_mode": true,
+          "bandwidth_allocation": { "gaming": 70, "communication": 20, "system": 10 }
+        }
+      }
+    },
+    "NetworkOptimization": {
+      "enabled": true,
+      "cooldownPeriod": 120000,
+      "maxConsecutiveOptimizations": 3,
+      "thresholds": {
+        "latency": {
+          "warning": 50,
+          "critical": 100
+        },
+        "packet_loss": {
+          "warning": 0.02,
+          "critical": 0.05
+        },
+        "bandwidth_utilization": {
+          "warning": 0.7,
+          "critical": 0.85
+        },
+        "network_health": {
+          "warning": 70,
+          "critical": 50
+        }
+      }
+    },
+    "SecurityMonitoring": {
+      "enabled": true,
+      "cooldownPeriod": 30000,
+      "autoBlockThreats": false,
+      "suspiciousPatterns": {
+        "ports": [22, 23, 135, 139, 445, 1433, 3389, 5900],
+        "countries": ["CN", "RU", "KP"],
+        "domains": ["tempmail", "guerrillamail", "mailinator"],
+        "processes": ["nc.exe", "ncat.exe", "netcat.exe"]
+      },
+      "alertThresholds": {
+        "suspiciousConnections": 5,
+        "foreignConnections": 10,
+        "highRiskPorts": 3,
+        "unknownProcesses": 5
+      }
+    },
+    "PerformanceAnalytics": {
+      "enabled": true,
+      "cooldownPeriod": 60000,
+      "maxHistorySize": 1000,
+      "analysisWindow": 300000,
+      "performanceThresholds": {
+        "cpu_high": 80,
+        "memory_high": 85,
+        "network_congestion": 70,
+        "latency_high": 100,
+        "performance_drop": 20
+      }
+    },
+    "MLPredictive": {
+      "enabled": true,
+      "cooldownPeriod": 120000,
+      "bufferSize": 10,
+      "maxPredictionHistory": 100,
+      "thresholds": {
+        "anomaly_score": 0.7,
+        "bottleneck_probability": 0.6,
+        "prediction_confidence": 0.5
+      },
+      "models": {
+        "anomaly": {
+          "enabled": true,
+          "path": "./Seraphims/anomaly_model.onnx"
+        },
+        "bottleneck": {
+          "enabled": true,
+          "path": "./Seraphims/network_bottleneck.onnx"
+        },
+        "gradient": {
+          "enabled": true,
+          "path": "./Seraphims/gradient_boosting.onnx"
+        }
+      }
+    }
+  },
+  "contextEngine": {
+    "cacheTimeout": 10000,
+    "maxContextHistory": 100,
+    "networkMetricsCacheTime": 10000
+  },
+  "actionExecutor": {
+    "maxConcurrentActions": 3,
+    "scriptTimeout": 30000,
+    "scriptsPath": "./scripts",
+    "validScripts": [
+      "Clear-NetworkCongestion.ps1",
+      "Flush-DnsCache.ps1",
+      "Maintain-PowerfulConnection.ps1",
+      "Optimize-Bandwidth.ps1",
+      "Reconnect-WiFi.ps1",
+      "Reset-NetworkIP.ps1",
+      "Switch-DnsServer.ps1",
+      "StableConnection.ps1"
+    ]
+  }
+}

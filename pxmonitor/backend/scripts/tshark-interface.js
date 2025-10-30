@@ -6,8 +6,8 @@ import { processRawPacketData } from './data-processing.js';
 import { calculateNetworkMetrics } from '../network-metrics.js';
 
 const TSHARK_CONFIG = {
-  command: 'D:\\PXMonitor\\pxmonitor\\tshark_libs\\tshark.exe',
-  defaultInterface: 'Wi-Fi',
+  command: "tshark",
+  defaultInterface: '5',
   outputFormat: 'fields',
   headerFormat: 'y',
   separator: ',',
